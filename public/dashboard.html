@@ -1,0 +1,2024 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Chamora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <style>
+    /* ══════════ CORE STYLES ══════════ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --sidebar-w: 240px;
+      --sidebar-bg: #0f1e14;
+      --sidebar-border: #1e3326;
+      --green: #1A4D2E;
+      --green-mid: #256338;
+      --green-light: #2d7a45;
+      --gold: #F5A623;
+      --gold-dim: rgba(245, 166, 35, 0.15);
+      --bg: #f4f6f5;
+      --surface: #ffffff;
+      --surface-2: #f9faf9;
+      --text: #141a16;
+      --text-2: #4a5c52;
+      --text-3: #8a9e93;
+      --border: #e4ece7;
+      --red: #ef4444;
+      --shadow: 0 2px 16px rgba(20, 50, 30, 0.07);
+      --radius: 14px;
+    }
+
+    body.dark-mode {
+      --bg: #0a0f0c;
+      --surface: #121a15;
+      --surface-2: #1a241e;
+      --text: #e4ece7;
+      --text-2: #b0c4b8;
+      --text-3: #708a7b;
+      --border: #1e3326;
+      --sidebar-bg: #050806;
+      --sidebar-border: #121a15;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    html,
+    body {
+      height: 100%;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 10px
+    }
+
+    /* Frosted Glass Background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: -60px;
+      z-index: -2;
+      background: radial-gradient(circle at 18% 22%, rgba(26, 77, 46, 0.15) 0%, transparent 58%), radial-gradient(circle at 78% 18%, rgba(245, 166, 35, 0.12) 0%, transparent 55%), linear-gradient(145deg, #f2f7f4 0%, #f8faf9 45%, #fffdf5 100%);
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: rgba(244, 246, 245, 0.55);
+      backdrop-filter: blur(18px) saturate(1.2);
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+      overflow: hidden
+    }
+
+    /* ══════════ SIDEBAR ══════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: width 0.3s ease;
+    }
+
+    .sidebar-logo {
+      padding: 1.4rem 1.25rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Sora', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: white;
+      text-decoration: none;
+      border-bottom: 1px solid var(--sidebar-border);
+    }
+
+    .logo-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--green-mid), var(--green-light));
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chama-switch {
+      margin: 0.85rem 0.9rem 0;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 10px;
+      padding: 0.65rem 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .cs-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      background: linear-gradient(135deg, var(--green-mid), #3a9e5f);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: white;
+    }
+
+    .cs-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: white;
+      flex: 1;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.85rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.25);
+      padding: 0.6rem 0.4rem 0.3rem;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0.6rem 0.75rem;
+      border-radius: 9px;
+      text-decoration: none;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.83rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.85)
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(45, 122, 69, 0.25), rgba(26, 77, 46, 0.15));
+      color: white;
+      border: 1px solid rgba(45, 122, 69, 0.3);
+    }
+
+    .nav-item.active svg {
+      color: var(--gold);
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      font-size: 0.65rem;
+      font-weight: 700;
+      background: var(--green-mid);
+      color: white;
+      padding: 1px 7px;
+      border-radius: 100px;
+    }
+
+    .sidebar-footer {
+      padding: 0.85rem 0.9rem;
+      border-top: 1px solid var(--sidebar-border);
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0.6rem 0.65rem;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    .user-av {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--green-mid), #3a9e5f);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: white;
+    }
+
+    .user-name {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .user-role {
+      font-size: 0.65rem;
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    /* ══════════ MAIN CONTENT AREA ══════════ */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 1.5rem;
+      gap: 1rem;
+    }
+
+    .topbar-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      flex: 1;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0 12px;
+      height: 36px;
+      width: 240px;
+    }
+
+    .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      font-size: 0.82rem;
+      flex: 1;
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .notif-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 7px;
+      height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      border: 1.5px solid white;
+    }
+
+    #view-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ══════════ VIEW-SPECIFIC STYLES ══════════ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .kpi-card {
+      padding: 1.25rem;
+    }
+
+    .kpi-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .kpi-val {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .kpi-label {
+      font-size: 0.8rem;
+      color: var(--text-3);
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--green), var(--green-light));
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--surface-2);
+      color: var(--text-3);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+    }
+
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Fixed KPI floating icons issue */
+    .kpi-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Notifications Popup */
+    #notif-popup {
+      position: absolute;
+      top: 65px;
+      right: 20px;
+      width: 320px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 100;
+      display: none;
+    }
+
+    .notif-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .notif-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .notif-item:hover {
+      background: var(--surface-2);
+    }
+
+    .notif-title {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .notif-time {
+      font-size: 0.7rem;
+      color: var(--text-3);
+    }
+
+    /* SPA View Transitions */
+    #view-container {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #view-container.loading {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    /* Settings Redesign */
+    .settings-tab-container {
+      display: flex;
+      gap: 2rem;
+      min-height: 500px;
+    }
+
+    .settings-nav {
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .settings-nav-btn {
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-3);
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      background: transparent;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .settings-nav-btn:hover {
+      background: var(--surface);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .settings-nav-btn.active {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+    }
+
+    .settings-content {
+      flex: 1;
+      padding-left: 1rem;
+      border-left: 1px solid var(--border);
+    }
+
+    .settings-panel {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .settings-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body class="dark-mode">
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <a href="#dashboard" class="sidebar-logo">
+        <div class="logo-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+            <path d="M2 17l10 5 10-5" />
+            <path d="M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <span>Chamora</span>
+      </a>
+
+      <div class="chama-switch">
+        <div class="cs-avatar">UC</div>
+        <span class="cs-name">Umoja Chama</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-label">Main</div>
+        <a href="#dashboard" class="nav-item" id="nav-dashboard">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#members" class="nav-item" id="nav-members">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span>Members</span>
+        </a>
+        <a href="#contributions" class="nav-item" id="nav-contributions">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="5" width="20" height="14" rx="2" />
+            <line x1="2" y1="10" x2="22" y2="10" />
+          </svg>
+          <span>Contributions</span>
+        </a>
+        <a href="#loans" class="nav-item" id="nav-loans">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="1" x2="12" y2="23" />
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+          <span>Loans</span>
+        </a>
+
+        <div class="nav-label">Utilities</div>
+        <a href="#analytics" class="nav-item" id="nav-analytics">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+            <polyline points="16 7 22 7 22 13" />
+          </svg>
+          <span>Analytics</span>
+        </a>
+        <a href="#minutes" class="nav-item" id="nav-minutes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+          <span>Minutes</span>
+        </a>
+        <a href="#meetings" class="nav-item" id="nav-meetings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span>Meetings</span>
+        </a>
+
+        <div class="nav-label">Finance</div>
+        <a href="#mpesa" class="nav-item" id="nav-mpesa">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path d="M7 15h.01" />
+            <path d="M11 15h.01" />
+            <path d="M15 15h.01" />
+            <path d="M19 15h.01" />
+            <path d="M7 11h.01" />
+            <path d="M11 11h.01" />
+            <path d="M15 11h.01" />
+            <path d="M19 11h.01" />
+          </svg>
+          <span>M-Pesa</span>
+        </a>
+
+        <div class="nav-label">Account</div>
+        <a href="#settings" class="nav-item" id="nav-settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          <span>Settings</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-card" onclick="window.location.hash='#settings'">
+          <div class="user-av" id="user-initials">AD</div>
+          <div class="user-info">
+            <div class="user-name" id="user-name">Admin User</div>
+            <div class="user-role">Administrator</div>
+          </div>
+        </div>
+        <div
+          style="font-size: 0.65rem; color: rgba(255,255,255,0.2); padding: 0.5rem 0.65rem; border-top: 1px solid var(--sidebar-border); margin-top: 0.5rem; text-align: center;">
+          Built by Norris Frank
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="topbar">
+        <h1 class="topbar-title" id="page-title">Dashboard</h1>
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input type="text" id="global-search" placeholder="Search anything (e.g. 'members')..."
+            onkeyup="handleGlobalSearch(event)" />
+        </div>
+        <div class="topbar-actions">
+          <div class="icon-btn" onclick="toggleNotifs()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <div class="notif-dot"></div>
+          </div>
+          <div class="icon-btn" onclick="logout()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </div>
+        </div>
+      </header>
+
+      <div id="view-container">
+        <!-- Content injected here -->
+      </div>
+    </main>
+  </div>
+
+  <!-- NOTIFICATION POPUP -->
+  <div id="notif-popup">
+    <div class="notif-header">
+      <span>Notifications</span>
+      <span style="font-size: 0.7rem; color: var(--green); cursor: pointer;" onclick="markAllRead()">Mark all
+        read</span>
+    </div>
+    <div id="notif-list">
+      <!-- Items -->
+    </div>
+  </div>
+
+  <!-- MODALS -->
+  <div id="addMemberModal" class="hidden modal-root">
+    <div class="card" style="width: 100%; max-width: 480px; padding: 2.25rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-family: 'Sora', sans-serif; font-size: 1.35rem; font-weight: 800;">Add New Member</h2>
+        <button onclick="hideAddMemberModal()"
+          style="border: none; background: none; cursor: pointer; color: var(--text-3);"><svg width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg></button>
+      </div>
+      <form id="addMemberForm">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+          <div><label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">First
+              Name</label><input type="text" id="m-fname" placeholder="John"
+              style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+              required></div>
+          <div><label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Last
+              Name</label><input type="text" id="m-lname" placeholder="Doe"
+              style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+              required></div>
+        </div>
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Phone Number</label><input
+            type="tel" id="m-phone" placeholder="0712 345 678"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+            required></div>
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Email Address</label><input
+            type="email" id="m-email" placeholder="email@example.com"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+            required></div>
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Role</label>
+          <select id="m-role"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);">
+            <option value="Member">Member</option>
+            <option value="Treasurer">Treasurer</option>
+            <option value="Secretary">Secretary</option>
+            <option value="Chairman">Chairman</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="button" class="btn-primary"
+            style="flex: 1; background: var(--surface); color: var(--text-2); justify-content: center; border: 1px solid var(--border);"
+            onclick="hideAddMemberModal()">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">Save Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="recordPaymentModal" class="hidden modal-root">
+    <div class="card" style="width: 100%; max-width: 480px; padding: 2.25rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-family: 'Sora', sans-serif; font-size: 1.35rem; font-weight: 800;">Record Payment</h2>
+        <button onclick="hideRecordPaymentModal()"
+          style="border: none; background: none; cursor: pointer; color: var(--text-3);"><svg width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg></button>
+      </div>
+      <form id="recordPaymentForm">
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Amount (KSh)</label><input
+            type="number" id="p-amount"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+            required></div>
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Group/Category</label>
+          <select id="p-group"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);">
+            <option value="1">Umoja Chama (Main)</option>
+            <option value="2">Emergency Fund</option>
+            <option value="3">Welfare Fund</option>
+          </select>
+        </div>
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Phone Number (for
+            M-Pesa)</label><input type="tel" id="p-phone" placeholder="2547..."
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);">
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="button" class="btn-primary"
+            style="flex: 1; background: var(--surface); color: var(--text-2); justify-content: center; border: 1px solid var(--border);"
+            onclick="hideRecordPaymentModal()">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">Record Cash</button>
+        </div>
+        <button type="button" class="btn-primary"
+          style="width: 100%; margin-top: 0.75rem; background: #37b34a; justify-content: center; border: none;"
+          onclick="payWithMpesa()">Pay with M-Pesa STK</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="requestLoanModal" class="hidden modal-root">
+    <div class="card" style="width: 100%; max-width: 480px; padding: 2.25rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-family: 'Sora', sans-serif; font-size: 1.35rem; font-weight: 800;">Request Loan</h2>
+        <button onclick="hideRequestLoanModal()"
+          style="border: none; background: none; cursor: pointer; color: var(--text-3);"><svg width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg></button>
+      </div>
+      <form id="requestLoanForm">
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Principal Amount
+            (KSh)</label><input type="number" id="l-amount"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+            required></div>
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Reason for
+            Loan</label><textarea id="l-reason" placeholder="What is this loan for?"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+            rows="3"></textarea></div>
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="button" class="btn-primary"
+            style="flex: 1; background: var(--surface); color: var(--text-2); justify-content: center; border: 1px solid var(--border);"
+            onclick="hideRequestLoanModal()">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="createMeetingModal" class="hidden modal-root">
+    <div class="card" style="width: 100%; max-width: 480px; padding: 2.25rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="font-family: 'Sora', sans-serif; font-size: 1.35rem; font-weight: 800;">Create Event</h2>
+        <button onclick="hideCreateMeetingModal()"
+          style="border: none; background: none; cursor: pointer; color: var(--text-3);"><svg width="24" height="24"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg></button>
+      </div>
+      <form id="createMeetingForm">
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Event Title</label><input
+            type="text" id="mt-title" placeholder="e.g. Monthly Sacco Meeting"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+            required></div>
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Date & Time</label><input
+            type="datetime-local" id="mt-date"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+            required></div>
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Location /
+            Platform</label><input type="text" id="mt-loc" placeholder="Physical location or Link"
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);"
+            required></div>
+        <div style="margin-bottom: 1.25rem;"><label
+            style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Meeting Link
+            (Optional)</label><input type="url" id="mt-link" placeholder="https://zoom.us/..."
+            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);">
+        </div>
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button type="button" class="btn-primary"
+            style="flex: 1; background: var(--surface); color: var(--text-2); justify-content: center; border: 1px solid var(--border);"
+            onclick="hideCreateMeetingModal()">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex: 1; justify-content: center;">Create Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    .modal-root {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+  </style>
+
+  <script>
+    const baseOrigin = window.location.origin === 'null' ? 'http://localhost:5000' : window.location.origin;
+    const API_URL = `${baseOrigin}/api`;
+    const socket = (typeof io !== 'undefined')
+      ? io(baseOrigin, { transports: ['websocket', 'polling'], reconnection: true, reconnectionAttempts: 3 })
+      : { on: () => { }, emit: () => { } };
+
+    // ══════════ VIEW MANAGER ══════════
+    const ViewManager = {
+      currentView: '',
+      views: {
+        dashboard: {
+          title: 'Dashboard Overview',
+          render: () => `
+            <div class="kpi-row">
+                <div class="card kpi-card">
+                    <div class="kpi-top">
+                        <div class="kpi-icon" style="background: rgba(34, 197, 94, 0.1); color: #16a34a">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <span style="font-size: 0.7rem; color: #16a34a; font-weight: 700;">+12.5% ↑</span>
+                    </div>
+                    <div class="kpi-val" id="total-savings">KSh 0</div>
+                    <div class="kpi-label">Total Savings</div>
+                    <div style="font-size: 0.7rem; color: var(--text-3); margin-top: 6px;" id="savings-update-time">Updated just now</div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-top">
+                        <div class="kpi-icon" style="background: rgba(245, 166, 35, 0.1); color: var(--gold)">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                        </div>
+                        <span style="font-size: 0.7rem; color: var(--gold); font-weight: 700;">2 New</span>
+                    </div>
+                    <div class="kpi-val" id="total-members">0</div>
+                    <div class="kpi-label">Total Members</div>
+                    <div style="font-size: 0.7rem; color: var(--text-3); margin-top: 6px;">3 Pending approvals</div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-top">
+                        <div class="kpi-icon" style="background: rgba(59, 130, 246, 0.1); color: #2563eb">
+                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        </div>
+                        <span style="font-size: 0.7rem; color: #dc2626; font-weight: 700;">-2.4% ↓</span>
+                    </div>
+                    <div class="kpi-val" id="active-loans">KSh 0</div>
+                    <div class="kpi-label">Active Loans</div>
+                    <div style="font-size: 0.7rem; color: #dc2626; margin-top: 6px;">KSh 12k Overdue</div>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Activity</h3>
+                        <a href="#contributions" class="btn-primary" style="text-decoration: none;">All Activity</a>
+                    </div>
+                    <div class="table-wrap">
+                        <table id="recent-activity-table">
+                            <thead><tr><th>User</th><th>Action</th><th>Amount</th><th>Status</th></tr></thead>
+                            <tbody id="activity-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3 class="card-title">Reminders</h3></div>
+                    <div style="padding: 1.25rem;">
+                        <div style="padding: 1rem; border-radius: 10px; background: #e8f4ed; border: 1px solid #cce7d6; margin-bottom: 0.75rem;">
+                            <div style="font-size: 0.65rem; color: var(--green); font-weight: 800; text-transform: uppercase;">Upcoming</div>
+                            <div style="font-weight: 700; font-size: 0.85rem; margin: 4px 0;">Oct Monthly Meeting</div>
+                            <div style="font-size: 0.7rem; color: var(--text-2);">Tomorrow, 5:00 PM at Community Hall</div>
+                        </div>
+                        <div style="padding: 1rem; border-radius: 10px; background: #fff8eb; border: 1px solid #f9e8cc;">
+                            <div style="font-size: 0.65rem; color: #b45309; font-weight: 800; text-transform: uppercase;">Contribution due</div>
+                            <div style="font-weight: 700; font-size: 0.85rem; margin: 4px 0;">Membership Dues</div>
+                            <div style="font-size: 0.7rem; color: #b45309;">6 members haven't paid this month.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          `,
+          init: () => {
+            loadAnalytics();
+            loadRecentActivity();
+          }
+        },
+        members: {
+          title: 'Chama Members',
+          render: () => `
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title">Member Directory</h3>
+                        <p style="font-size: 0.75rem; color: var(--text-3);">Manage your chama's members and their roles.</p>
+                    </div>
+                    <button class="btn-primary" onclick="showAddMemberModal()">+ New Member</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Member</th><th>Role</th><th>Phone</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+                        <tbody id="members-list-body"></tbody>
+                    </table>
+                </div>
+            </div>
+          `,
+          init: () => {
+            loadMembers();
+            setupAddMemberForm();
+          }
+        },
+        contributions: {
+          title: 'Contributions',
+          render: () => `
+            <div class="kpi-row" style="margin-bottom: 1.25rem;">
+                <div class="card kpi-card">
+                    <div class="kpi-label">Month Collection</div>
+                    <div class="kpi-val" id="contrib-month-val">KSh 0</div>
+                    <div style="font-size: 0.7rem; color: #16a34a; font-weight: 700;">Real-time update</div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-label">Active Loans Volume</div>
+                    <div class="kpi-val" style="color: #dc2626;" id="contrib-loans-val">KSh 0</div>
+                    <div style="font-size: 0.7rem; color: var(--text-3);">Based on active records</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Transaction Records</h3>
+                    <button class="btn-primary" onclick="showRecordPaymentModal()">+ Record Payment</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Member</th><th>Category</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody id="contrib-body"></tbody>
+                    </table>
+                </div>
+            </div>
+          `,
+          init: () => loadContributions()
+        },
+        loans: {
+          title: 'Loans System',
+          render: () => `
+            <div class="kpi-row" style="margin-bottom: 1.25rem;">
+                <div class="card kpi-card">
+                    <div class="kpi-label">Active Disbursed</div>
+                    <div class="kpi-val">KSh 450,000</div>
+                    <div style="font-size: 0.7rem; color: var(--text-3);">Across 8 members</div>
+                </div>
+                 <div class="card kpi-card">
+                    <div class="kpi-label">Interest Earned</div>
+                    <div class="kpi-val" style="color: #16a34a;">KSh 22,500</div>
+                    <div style="font-size: 0.7rem; color: #16a34a;">+KSh 4k this month</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Loan Management</h3>
+                    <button class="btn-primary" onclick="showRequestLoanModal()">Request New Loan</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Borrower</th><th>Amount</th><th>Interest</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="loans-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Loan Calculator Section -->
+            <div class="card" style="margin-top: 1.25rem;">
+                <div class="card-header"><h3 class="card-title">Loan Calculator</h3></div>
+                <div style="padding: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Principal Amount (KSh)</label>
+                            <input type="number" id="calc-amount" value="10000" oninput="calcLoan()" style="width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: 8px; outline: none; background: var(--surface-2);">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Interest Rate (% per month)</label>
+                            <input type="number" id="calc-rate" value="5" oninput="calcLoan()" style="width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: 8px; outline: none; background: var(--surface-2);">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Period (Months)</label>
+                            <input type="number" id="calc-months" value="1" oninput="calcLoan()" style="width: 100%; padding: 0.65rem; border: 1px solid var(--border); border-radius: 8px; outline: none; background: var(--surface-2);">
+                        </div>
+                    </div>
+                    <div style="background: var(--surface-2); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px dashed var(--border);">
+                        <div style="text-align: center; margin-bottom: 1rem;">
+                            <div style="font-size: 0.75rem; color: var(--text-3); margin-bottom: 4px;">Estimated Repayment</div>
+                            <div id="calc-total" style="font-size: 1.5rem; font-weight: 800; color: var(--green);">KSh 10,500</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.75rem; color: var(--text-3); margin-bottom: 4px;">Monthly Installment</div>
+                            <div id="calc-monthly" style="font-size: 1.1rem; font-weight: 700; color: var(--gold);">KSh 10,500</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          `,
+          init: () => loadLoans()
+        },
+        minutes: {
+          title: 'Meeting Minutes',
+          render: () => `
+            <div style="display: grid; grid-template-columns: 320px 1fr; gap: 1.25rem;">
+                <div class="card" style="height: calc(100vh - 120px); display: flex; flex-direction: column;">
+                    <div class="card-header"><h3 class="card-title">Archive</h3></div>
+                    <div id="minutes-archive" style="flex: 1; overflow-y: auto; padding: 0.5rem;">
+                        <div style="padding: 2rem; text-align: center; color: var(--text-3);">Loading archive...</div>
+                    </div>
+                </div>
+                <div class="card" id="minutes-viewer" style="height: calc(100vh - 120px); overflow-y: auto;">
+                    <div class="card-header"><h3 class="card-title" id="m-view-title">Minutes Viewer</h3></div>
+                    <div id="m-view-content" style="padding: 2rem;">
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: var(--text-3);">
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 1rem;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <p>Select minutes from the list to view details.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+          `,
+          init: () => loadMinutes()
+        },
+        meetings: {
+          title: 'Meetings & Events',
+          render: () => `
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Calendar Schedule</h3>
+                    <button class="btn-primary" onclick="showCreateMeetingModal()">+ Create Event</button>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
+                         ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => `<div style="text-align: center; font-size: 0.7rem; font-weight: 800; color: var(--text-3); padding-bottom: 10px;">${d}</div>`).join('')}
+                         ${Array.from({ length: 31 }, (_, i) => {
+            const hasEvent = [5, 12, 19, 26].includes(i + 1);
+            return `<div style="min-height: 80px; border: 1px solid var(--border); border-radius: 8px; padding: 6px; font-size: 0.75rem; background: ${hasEvent ? '#e8f4ed' : 'white'};">
+                                <span style="font-weight: 700; color: ${hasEvent ? 'var(--green)' : 'inherit'}">${i + 1}</span>
+                                ${hasEvent ? '<div style="margin-top: 4px; font-size: 0.6rem; background: var(--green); color: white; padding: 2px 4px; border-radius: 4px;">Weekly Meet</div>' : ''}
+                             </div>`;
+          }).join('')}
+                    </div>
+                </div>
+                <div class="card" style="margin-top: 1.25rem;">
+                    <div class="card-header"><h3 class="card-title">Upcoming Meetings</h3></div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Meeting</th><th>Date & Time</th><th>Location</th><th>Action</th></tr></thead>
+                            <tbody id="meetings-list-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+          `,
+          init: () => loadMeetings()
+        },
+        analytics: {
+          title: 'Financial Analytics',
+          render: () => `
+            <div class="card" style="margin-bottom: 1.25rem;">
+                <div class="card-header"><h3 class="card-title">Growth Overview</h3></div>
+                <div style="padding: 2rem; display: flex; align-items: center; justify-content: center; height: 300px; background: var(--surface-2);">
+                    <div style="text-align: center;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="margin-bottom: 1rem;"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        <p style="color: var(--text-3); font-weight: 600;">Chart visualization would load here.</p>
+                        <div style="margin-top: 1rem; font-size: 1.5rem; font-weight: 800; color: var(--green);" id="analytics-total-savings">KSh 0.00</div>
+                        <div style="font-size: 0.75rem; color: var(--text-3);">Cumulative Group Savings</div>
+                    </div>
+                </div>
+            </div>
+            <div class="kpi-row">
+                 <div class="card kpi-card">
+                    <div class="kpi-label">Active Members</div>
+                    <div class="kpi-val" id="analytics-members">0</div>
+                </div>
+                <div class="card kpi-card">
+                    <div class="kpi-label">Loan Utilization</div>
+                    <div class="kpi-val" id="analytics-utilization">0%</div>
+                </div>
+            </div>
+          `,
+          init: () => loadAnalytics()
+        },
+        mpesa: {
+          title: 'M-Pesa Management',
+          render: () => `
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                <div class="card">
+                    <div class="card-header"><h3 class="card-title">Live STK Push</h3></div>
+                    <div style="padding: 1.5rem;">
+                        <div style="background: var(--surface-2); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 48px; height: 48px; background: #37b34a; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5z"/></svg></div>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 1.1rem; color: #37b34a;">Safe & Secure</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-3);">Integrated with Safaricom Daraja API</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div><label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Phone Number</label><input type="tel" id="test-phone" placeholder="254712345678" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; outline: none;"></div>
+                            <div><label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px;">Amount (KES)</label><input type="number" id="test-amount" value="1" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; outline: none;"></div>
+                            <button class="btn-primary" style="justify-content: center; height: 48px; font-size: 1rem;" onclick="testSTK()">Request STK Push →</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3 class="card-title">Finance Summary</h3></div>
+                    <div style="padding: 1.5rem;">
+                         <div style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 8px;"><span style="color: var(--text-3);">M-Pesa Balance</span><span style="font-weight: 700;">KSh 42,500</span></div>
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 8px;"><span style="color: var(--text-3);">Bank Settlement</span><span style="font-weight: 700;">KSh 1,200,000</span></div>
+                            <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 8px;"><span style="color: var(--text-3);">Service Fees</span><span style="font-weight: 700;">KSh 650</span></div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+          `,
+          init: () => { }
+        },
+        settings: {
+          title: 'Settings',
+          render: () => `
+            <div class="settings-tab-container">
+                <div class="settings-nav">
+                    <button class="settings-nav-btn active" onclick="switchSettingsTab('profile', this)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Profile & Account
+                    </button>
+                    <button class="settings-nav-btn" onclick="switchSettingsTab('security', this)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Security & Privacy
+                    </button>
+                    <button class="settings-nav-btn" onclick="switchSettingsTab('preferences', this)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        Preferences
+                    </button>
+                    <button class="settings-nav-btn" onclick="switchSettingsTab('help', this)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Help & Support
+                    </button>
+                </div>
+                
+                <div class="settings-content card">
+                    <!-- Profile Panel -->
+                    <div id="settings-profile" class="settings-panel active">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--text);">Profile Information</h3>
+                        <form id="updateProfileForm" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem;">
+                                <div style="width: 80px; height: 80px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; font-weight: 700;" id="settings-av">AD</div>
+                                <div>
+                                    <button type="button" class="btn-primary" style="font-size: 0.8rem; padding: 8px 16px;">Change Avatar</button>
+                                    <div style="font-size: 0.7rem; color: var(--text-3); margin-top: 5px;">JPG, GIF or PNG. Max size of 800K</div>
+                                </div>
+                            </div>
+                            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                                <div><label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Display Name</label>
+                                <input type="text" id="s-name" style="width: 100%; padding: 0.85rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); color: var(--text);"></div>
+                                <div><label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Email Address</label>
+                                <input type="email" id="s-email" readonly style="width: 100%; padding: 0.85rem; border: 1px solid var(--border); border-radius: 10px; background: rgba(0,0,0,0.03); color: var(--text-3); cursor: not-allowed;"></div>
+                            </div>
+                            <button type="submit" class="btn-primary" style="width: fit-content; padding: 0.85rem 2rem;">Save Changes</button>
+                        </form>
+                    </div>
+
+                    <!-- Security Panel -->
+                    <div id="settings-security" class="settings-panel">
+                        <h3 style="margin-bottom: 0.5rem; color: var(--text);">Security Settings</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-3); margin-bottom: 2rem;">Update your password and secure your account.</p>
+                        <form id="changePasswordForm" style="display: flex; flex-direction: column; gap: 1.5rem; max-width: 400px;">
+                            <div><label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Current Password</label>
+                            <input type="password" id="cp-current" required style="width: 100%; padding: 0.85rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); color: var(--text);"></div>
+                            <div><label style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">New Password</label>
+                            <input type="password" id="cp-new" required style="width: 100%; padding: 0.85rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-2); color: var(--text);"></div>
+                            <button type="submit" class="btn-primary" style="width: fit-content; padding: 0.85rem 2rem;">Update Password</button>
+                        </form>
+                    </div>
+
+                    <!-- Preferences Panel -->
+                    <div id="settings-preferences" class="settings-panel">
+                        <h3 style="margin-bottom: 1.5rem; color: var(--text);">System Preferences</h3>
+                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 1.25rem; background: var(--surface-2); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 1rem;">
+                            <div><div style="font-weight: 700; font-size: 0.9rem;">Dark Mode</div><div style="font-size: 0.75rem; color: var(--text-3);">Toggle system appearance</div></div>
+                            <label class="switch" style="position: relative; display: inline-block; width: 44px; height: 22px;">
+                                <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode(this.checked)" style="opacity: 0; width: 0; height: 0;">
+                                <span style="position: absolute; cursor: pointer; inset: 0; background: #ccc; transition: .4s; border-radius: 34px;"></span>
+                            </label>
+                        </div>
+          `,
+          init: () => {
+            setupSettingsLogic();
+          }
+        }
+      },
+
+      init() {
+        window.addEventListener('hashchange', () => this.handleRouting());
+        this.handleRouting();
+        loadUserProfile();
+        checkWelcomePopup();
+
+        // Socket.io Real-time Listeners
+        socket.on('memberAdded', () => this.refreshData());
+        socket.on('memberUpdated', () => this.refreshData());
+        socket.on('memberDeleted', () => this.refreshData());
+        socket.on('contributionAdded', () => this.refreshData());
+        socket.on('contributionUpdated', () => this.refreshData());
+        socket.on('contributionDeleted', () => this.refreshData());
+        socket.on('loanUpdated', () => this.refreshData());
+        socket.on('meetingUpdated', () => this.refreshData());
+      },
+
+      refreshData() {
+        loadAnalytics();
+        if (this.currentView === 'dashboard') loadRecentActivity();
+        if (this.currentView === 'members') loadMembers();
+        if (this.currentView === 'contributions') loadContributions();
+        if (this.currentView === 'loans') loadLoans();
+        if (this.currentView === 'minutes') loadMinutes();
+      },
+
+      handleRouting() {
+        const hash = window.location.hash.replace('#', '') || 'dashboard';
+        if (this.currentView === hash) return;
+
+        const container = document.getElementById('view-container');
+        container.classList.add('loading');
+
+        setTimeout(() => {
+          this.currentView = hash;
+          const view = this.views[hash] || this.views.dashboard;
+
+          // Update UI
+          container.innerHTML = view.render();
+          document.getElementById('page-title').innerText = view.title;
+
+          // Update Sidebar
+          document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+          const activeNav = document.getElementById(`nav-${hash}`);
+          if (activeNav) activeNav.classList.add('active');
+
+          // Run init logic
+          if (view.init) view.init();
+
+          // Hide all modals on route change
+          document.querySelectorAll('.hidden').forEach(m => m.classList.add('hidden'));
+          // Manual hide for modals that might be open
+          ['addMemberModal', 'recordPaymentModal', 'requestLoanModal', 'createMeetingModal'].forEach(id => {
+            const m = document.getElementById(id);
+            if (m) m.classList.add('hidden');
+          });
+
+          container.classList.remove('loading');
+        }, 150);
+      }
+    };
+
+    // ══════════ DATA FETCHING & LOGIC ══════════
+
+    async function fetchWithAuth(url, options = {}) {
+      const token = localStorage.getItem('token');
+      const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      return fetch(url, {
+        ...options,
+        headers,
+        credentials: 'include'
+      });
+    }
+
+    async function loadUserProfile() {
+      try {
+        const res = await fetchWithAuth(`${API_URL}/auth/me`);
+        if (res.status === 401) return window.location.href = 'login.html';
+        const user = await res.json();
+        if (user) {
+          document.getElementById('user-name').innerText = user.first_name + ' ' + user.last_name;
+          document.getElementById('user-initials').innerText = (user.first_name[0] + user.last_name[0]).toUpperCase();
+        }
+      } catch (err) { console.error('Profile load failed', err); }
+    }
+
+
+    async function loadRecentActivity() {
+      try {
+        const res = await fetchWithAuth(`${API_URL}/contributions/my`);
+        const logs = await res.json();
+        const tbody = document.getElementById('activity-body');
+        if (!tbody) return;
+        if (!logs || !logs.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-3); padding: 2rem;">No recent activities found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = logs.slice(0, 5).map(l => {
+          const isIncome = l.amount > 0;
+          return `
+            <tr>
+                <td>Me</td>
+                <td>Contribution</td>
+                <td><span style="font-weight: 700; color: ${isIncome ? 'var(--green)' : 'var(--gold)'}">KSh ${parseFloat(l.amount).toLocaleString()}</span></td>
+                <td><span style="padding: 2px 8px; border-radius: 20px; background: rgba(34,197,94,0.1); color: #16a34a; font-size: 0.7rem;">${l.status}</span></td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) { console.error('Activity load failed', err); }
+    }
+
+    async function loadMembers() {
+      try {
+        const res = await fetchWithAuth(`${API_URL}/members`);
+        const members = await res.json();
+        const tbody = document.getElementById('members-list-body');
+        if (!tbody) return;
+        tbody.innerHTML = members.map(m => `
+            <tr>
+                <td style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--green-mid), var(--green-light)); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800;">${(m.first_name[0] + (m.last_name ? m.last_name[0] : '')).toUpperCase()}</div>
+                    <div>
+                        <div style="font-weight: 700;">${m.first_name} ${m.last_name || ''}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-3);">${m.phone_number || 'No contact'}</div>
+                    </div>
+                </td>
+                <td><span style="padding: 2px 8px; border-radius: 20px; background: rgba(59, 130, 246, 0.1); color: #2563eb; font-size: 0.7rem; font-weight: 600;">${m.role}</span></td>
+                <td>${m.phone_number}</td>
+                <td><span style="display: inline-block; padding: 2px 8px; border-radius: 20px; background: #e8f4ed; color: #16a34a; font-size: 0.7rem; font-weight: 600;">● Active</span></td>
+                <td>${new Date(m.created_at || Date.now()).toLocaleDateString()}</td>
+                <td><button style="border: none; background: none; cursor: pointer; color: var(--text-3);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
+            </tr>
+        `).join('');
+      } catch (err) { console.error('Members load failed', err); }
+    }
+
+    async function loadContributions() {
+      try {
+        const res = await fetchWithAuth(`${API_URL}/contributions/my`);
+        const contributions = await res.json();
+        const tbody = document.getElementById('contrib-body');
+        if (!tbody) return;
+        if (!contributions.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-3); padding: 2rem;">No contribution records found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = contributions.map(c => `
+            <tr>
+                <td>Me</td>
+                <td>${c.group_name || 'General Savings'}</td>
+                <td class="amount-cell">KSh ${parseFloat(c.amount).toLocaleString()}</td>
+                <td>M-Pesa STK</td>
+                <td><span style="padding: 2px 8px; border-radius: 20px; background: rgba(34,197,94,0.1); color: #16a34a; font-size: 0.7rem;">${c.status}</span></td>
+                <td>${new Date(c.date).toLocaleDateString()}</td>
+            </tr>
+        `).join('');
+      } catch (err) { console.error('Contributions load failed', err); }
+    }
+
+    async function loadLoans() {
+      try {
+        const res = await fetchWithAuth(`${API_URL}/loans/my`);
+        const loans = await res.json();
+        const tbody = document.getElementById('loans-body');
+        if (!tbody) return;
+        if (!loans || !loans.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-3); padding: 2rem;">No active loans found.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = loans.map(l => `
+            <tr>
+                <td>Me</td>
+                <td>KSh ${parseFloat(l.amount).toLocaleString()}</td>
+                <td>${l.interest}%</td>
+                <td>${new Date(l.due_date).toLocaleDateString()}</td>
+                <td><span style="padding: 2px 8px; border-radius: 20px; background: rgba(245,166,35,0.1); color: var(--gold); font-size: 0.7rem;">${l.status}</span></td>
+                <td><button style="border: none; background: none; cursor: pointer; color: var(--text-3);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg></button></td>
+            </tr>
+        `).join('');
+      } catch (err) { console.error('Loan load failed', err); }
+    }
+
+    async function loadAnalytics() {
+      try {
+        const res = await fetchWithAuth(`${API_URL}/dashboard/stats`);
+        const data = await res.json();
+        if (data) {
+          // Dashboard Overview
+          const sVal = document.getElementById('total-savings');
+          const mVal = document.getElementById('total-members');
+          const lVal = document.getElementById('active-loans');
+
+          if (sVal) sVal.innerText = `KSh ${parseFloat(data.totalSavings).toLocaleString()}`;
+          if (mVal) mVal.innerText = data.totalMembers;
+          if (lVal) lVal.innerText = `KSh ${parseFloat(data.activeLoansAmount).toLocaleString()}`;
+
+          // Analytics View specific elements
+          const aSavings = document.getElementById('analytics-total-savings');
+          const aMembers = document.getElementById('analytics-members');
+          const aUtil = document.getElementById('analytics-utilization');
+
+          if (aSavings) aSavings.innerText = `KSh ${parseFloat(data.totalSavings).toLocaleString()}`;
+          if (aMembers) aMembers.innerText = data.totalMembers;
+
+          const utilization = data.totalSavings > 0 ? ((data.activeLoansAmount / data.totalSavings) * 100).toFixed(1) : 0;
+          if (aUtil) aUtil.innerText = `${utilization}%`;
+
+          // Update Contribution KPIs if in view
+          const cMonth = document.getElementById('contrib-month-val');
+          if (cMonth) cMonth.innerText = `KSh ${parseFloat(data.monthlySavings).toLocaleString()}`;
+        }
+      } catch (err) { console.error('Analytics load failed', err); }
+    }
+
+    async function loadMinutes() {
+      try {
+        const res = await fetchWithAuth(`${API_URL}/meetings`);
+        const meetings = await res.json();
+        const archive = document.getElementById('minutes-archive');
+        if (!archive) return;
+
+        if (meetings.length === 0) {
+          archive.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-3);">No minutes recorded yet.</div>';
+          return;
+        }
+
+        archive.innerHTML = meetings.map(m => `
+            <div onclick="viewMinute(${m.id}, '${m.title}')" style="padding: 12px; border-radius: 8px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid var(--border);">
+                <div style="font-weight: 700; font-size: 0.85rem;">${m.title}</div>
+                <div style="font-size: 0.7rem; color: var(--text-3);">${new Date(m.date).toLocaleDateString()} · ${m.location}</div>
+            </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load minutes', e);
+      }
+    }
+
+    async function viewMinute(meetingId, title) {
+      const viewer = document.getElementById('m-view-content');
+      if (!viewer) return;
+      document.getElementById('m-view-title').innerText = title;
+
+      try {
+        const res = await fetchWithAuth(`${API_URL}/meetings/${meetingId}/minutes`);
+        const minute = await res.json();
+
+        if (!minute) {
+          viewer.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--text-3);">No detailed minutes found for this meeting.</div>`;
+          return;
+        }
+
+        viewer.innerHTML = `
+            <div style="background: var(--surface-2); border-radius: 12px; padding: 2rem; box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);">
+                <h4 style="margin-bottom: 1rem; border-bottom: 2px solid var(--green); display: inline-block;">Meeting Content</h4>
+                <div style="line-height: 1.8; color: var(--text-2); white-space: pre-wrap;">${minute.content}</div>
+                <div style="margin-top: 2rem; font-size: 0.75rem; color: var(--text-3);">Recorded on: ${new Date(minute.recorded_at).toLocaleString()}</div>
+            </div>
+        `;
+      } catch (e) {
+        viewer.innerHTML = `Error loading minutes.`;
+      }
+    }
+
+    function toggleNotifs() {
+      const p = document.getElementById('notif-popup');
+      p.style.display = p.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function checkWelcomePopup() {
+      // Always add welcome notification if not already present
+      const list = document.getElementById('notif-list');
+      if (!list.innerHTML.includes('Welcome Home')) {
+        addNotification('Welcome Home!', 'Successully logged into your Chamora dashboard.', true);
+      }
+
+      if (sessionStorage.getItem('firstLogin') === 'true') {
+        setTimeout(() => {
+          addNotification('New Login Detected', 'Your account was accessed from a new device.', false);
+          sessionStorage.removeItem('firstLogin');
+        }, 800);
+      }
+    }
+
+    function addNotification(title, text, isPersistent = false) {
+      const list = document.getElementById('notif-list');
+      if (!list) return;
+      const item = document.createElement('div');
+      item.className = 'notif-item';
+      item.innerHTML = `<div class="notif-title">${title}</div><div class="notif-time">${text}</div>`;
+
+      if (isPersistent) {
+        list.appendChild(item); // Add to end (or top if you prefer)
+      } else {
+        list.prepend(item);
+      }
+      const dot = document.querySelector('.notif-dot');
+      if (dot) dot.style.display = 'block';
+    }
+
+    async function testSTK() {
+      const btn = event.target;
+      const phone = document.getElementById('test-phone').value;
+      const amount = document.getElementById('test-amount').value;
+      if (!phone) return alert('Please enter phone number');
+
+      btn.innerText = 'Sending...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetchWithAuth(`${API_URL}/billing/stkpush`, {
+          method: 'POST',
+          body: JSON.stringify({ phone: phone, amount: amount })
+        });
+        const data = await res.json();
+        alert(data.CustomerMessage || 'STK Push Triggered Successfully!');
+        addNotification('Payment Initiated', `STK Push sent to ${phone} for KSh ${amount}`);
+      } catch (err) { alert('Internal server error'); }
+      finally {
+        btn.innerText = 'Request STK Push →';
+        btn.disabled = false;
+      }
+    }
+    function markAllRead() {
+      const list = document.getElementById('notif-list');
+      if (list) list.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-3); font-size: 0.8rem;">No new notifications</div>';
+      const dot = document.querySelector('.notif-dot');
+      if (dot) dot.style.display = 'none';
+      setTimeout(() => toggleNotifs(), 500);
+    }
+
+    function calcLoan() {
+      const principal = parseFloat(document.getElementById('calc-amount').value) || 0;
+      const rateMonth = parseFloat(document.getElementById('calc-rate').value) / 100 || 0;
+      const months = parseFloat(document.getElementById('calc-months').value) || 1;
+
+      const total = principal + (principal * rateMonth * months);
+      const monthly = total / months;
+
+      document.getElementById('calc-total').innerText = `KSh ${total.toLocaleString()}`;
+      document.getElementById('calc-monthly').innerText = `KSh ${monthly.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+    }
+
+    function showAddMemberModal() { document.getElementById('addMemberModal').classList.remove('hidden'); }
+    function hideAddMemberModal() { document.getElementById('addMemberModal').classList.add('hidden'); }
+
+    function setupAddMemberForm() {
+      const form = document.getElementById('addMemberForm');
+      if (!form) return;
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const firstName = document.getElementById('m-fname').value;
+        const lastName = document.getElementById('m-lname').value;
+        const email = document.getElementById('m-email').value;
+        const phoneNumber = document.getElementById('m-phone').value;
+        const role = document.getElementById('m-role').value;
+
+        btn.innerText = 'Saving...';
+        try {
+          const res = await fetchWithAuth(`${API_URL}/members`, {
+            method: 'POST',
+            body: JSON.stringify({ firstName, lastName, email, phoneNumber, role })
+          });
+          if (!res.ok) throw new Error('Failed to add member');
+          hideAddMemberModal();
+          loadMembers();
+          addNotification('Member Added', `${firstName} has been joined to the chama.`);
+        } catch (err) { alert(err.message); }
+        finally { btn.innerText = 'Save Member'; }
+      };
+    }
+
+    async function loadMeetings() {
+      try {
+        const res = await fetchWithAuth(`${API_URL}/meetings`);
+        const meetings = await res.json();
+        const tbody = document.getElementById('meetings-list-body');
+        if (!tbody) return;
+        if (!meetings.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-3); padding: 2rem;">No upcoming meetings.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = meetings.map(m => `
+            <tr>
+                <td style="font-weight: 700;">${m.title}</td>
+                <td>${new Date(m.date).toLocaleString()}</td>
+                <td>${m.location}</td>
+                <td>
+                    ${m.meeting_link ? `<a href="${m.meeting_link}" target="_blank" class="btn-primary" style="font-size: 0.7rem; padding: 4px 10px; display: inline-flex;">Join Meeting</a>` : '<span style="color: var(--text-3); font-size: 0.7rem;">No link</span>'}
+                </td>
+            </tr>
+        `).join('');
+      } catch (err) { console.error('Meetings load failed', err); }
+    }
+
+    async function logout() {
+      try {
+        await fetchWithAuth(`${API_URL}/auth/logout`, { method: 'POST' });
+        localStorage.removeItem('token');
+        window.location.href = 'index.html';
+      } catch (err) {
+        console.error('Logout failed', err);
+        localStorage.removeItem('token');
+        window.location.href = 'index.html';
+      }
+    }
+
+    // Initialize SPA
+    ViewManager.init();
+    setupAllFormListeners();
+    checkWelcomePopup();
+
+    // Socket listeners
+    socket.on('memberAdded', () => { if (ViewManager.currentView === 'members') loadMembers(); loadAnalytics(); });
+    socket.on('memberUpdate', () => { if (ViewManager.currentView === 'members') loadMembers(); });
+    socket.on('contributionAdded', () => {
+      if (ViewManager.currentView === 'contributions') loadContributions();
+      if (ViewManager.currentView === 'dashboard') { loadRecentActivity(); loadAnalytics(); }
+    });
+    socket.on('loanAdded', () => { if (ViewManager.currentView === 'loans') loadLoans(); loadAnalytics(); });
+    socket.on('meetingAdded', () => { if (ViewManager.currentView === 'meetings') loadMeetings(); });
+
+    function showRecordPaymentModal() { document.getElementById('recordPaymentModal').classList.remove('hidden'); }
+    function hideRecordPaymentModal() { document.getElementById('recordPaymentModal').classList.add('hidden'); }
+
+    function setupRecordPaymentForm() {
+      const form = document.getElementById('recordPaymentForm');
+      if (!form) return;
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const amount = document.getElementById('p-amount').value;
+        const groupId = document.getElementById('p-group').value;
+
+        btn.innerText = 'Recording...';
+        try {
+          const res = await fetchWithAuth(`${API_URL}/contributions`, {
+            method: 'POST',
+            body: JSON.stringify({ amount, groupId })
+          });
+          if (!res.ok) throw new Error('Failed to record payment');
+          hideRecordPaymentModal();
+          if (ViewManager.currentView === 'contributions') loadContributions();
+          if (ViewManager.currentView === 'dashboard') loadRecentActivity();
+          addNotification('Payment Recorded', `Amount of KSh ${amount} has been added.`);
+        } catch (err) { alert(err.message); }
+        finally { btn.innerText = 'Record Payment'; }
+      };
+    }
+
+    async function payWithMpesa() {
+      const amount = document.getElementById('p-amount').value;
+      const groupId = document.getElementById('p-group').value;
+      const phone = document.getElementById('p-phone').value;
+
+      if (!amount || !phone) return alert('Please enter amount and phone number');
+
+      const btn = event.target;
+      const originalText = btn.innerText;
+      btn.innerText = 'Initializing...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetchWithAuth(`${API_URL}/contributions/mpesa`, {
+          method: 'POST',
+          body: JSON.stringify({ amount, groupId, phone })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('STK Push sent! Please check your phone.');
+          hideRecordPaymentModal();
+          if (ViewManager.currentView === 'contributions') loadContributions();
+          addNotification('M-Pesa Initiated', `KSh ${amount} requested from ${phone}`);
+        } else {
+          alert('Error: ' + (data.message || 'Payment failed'));
+        }
+      } catch (err) {
+        alert('Network error');
+      } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    function showCreateMeetingModal() { document.getElementById('createMeetingModal').classList.remove('hidden'); }
+    function hideCreateMeetingModal() { document.getElementById('createMeetingModal').classList.add('hidden'); }
+
+    function setupCreateMeetingForm() {
+      const form = document.getElementById('createMeetingForm');
+      if (!form) return;
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const title = document.getElementById('mt-title').value;
+        const date = document.getElementById('mt-date').value;
+        const location = document.getElementById('mt-loc').value;
+        const description = ""; // Optional for now, add to modal if needed
+        const meetingLink = document.getElementById('mt-link').value;
+
+        btn.innerText = 'Creating...';
+        try {
+          const res = await fetchWithAuth(`${API_URL}/meetings`, {
+            method: 'POST',
+            body: JSON.stringify({ title, date, location, description, meetingLink })
+          });
+          if (!res.ok) throw new Error('Failed to create event');
+          hideCreateMeetingModal();
+          alert('Event created successfully!');
+          addNotification('Event Created', `${title} has been scheduled.`);
+        } catch (err) { alert(err.message); }
+        finally { btn.innerText = 'Create Event'; }
+      };
+    }
+
+    function showRequestLoanModal() { document.getElementById('requestLoanModal').classList.remove('hidden'); }
+    function hideRequestLoanModal() { document.getElementById('requestLoanModal').classList.add('hidden'); }
+
+    function setupRequestLoanForm() {
+      const form = document.getElementById('requestLoanForm');
+      if (!form) return;
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = e.target.querySelector('button[type="submit"]');
+        const amount = document.getElementById('l-amount').value;
+        const reason = document.getElementById('l-reason').value;
+
+        btn.innerText = 'Submitting...';
+        try {
+          const res = await fetchWithAuth(`${API_URL}/loans/apply`, {
+            method: 'POST',
+            body: JSON.stringify({ amount, interest: 5, dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }) // Default 5% / 30 days
+          });
+          if (!res.ok) throw new Error('Failed to request loan');
+          hideRequestLoanModal();
+          if (ViewManager.currentView === 'loans') loadLoans();
+          addNotification('Loan Requested', `Your application for KSh ${amount} has been submitted.`);
+        } catch (err) { alert(err.message); }
+        finally { btn.innerText = 'Submit Request'; }
+      };
+    }
+
+    // ══════════ SETTINGS & DARK MODE ══════════
+
+    function toggleDarkMode(isDark) {
+      if (isDark) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    function applyInitialTheme() {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'light') {
+        document.body.classList.remove('dark-mode');
+      } else {
+        document.body.classList.add('dark-mode');
+      }
+    }
+
+    async function setupSettingsLogic() {
+      const modeToggle = document.getElementById('dark-mode-toggle');
+      if (modeToggle) {
+        modeToggle.checked = document.body.classList.contains('dark-mode');
+      }
+
+      // Populate Display Name
+      const nameInput = document.getElementById('s-name');
+      const emailInput = document.getElementById('s-email');
+      if (nameInput) nameInput.value = document.getElementById('user-name').innerText;
+      if (emailInput) {
+        try {
+          const res = await fetchWithAuth(`${API_URL}/auth/me`);
+          const user = await res.json();
+          emailInput.value = user.email;
+        } catch (e) { }
+      }
+
+      const pwForm = document.getElementById('changePasswordForm');
+      if (pwForm) {
+        pwForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const currentPassword = document.getElementById('cp-current').value;
+          const newPassword = document.getElementById('cp-new').value;
+          const btn = e.target.querySelector('button');
+
+          btn.innerText = 'Updating...';
+          try {
+            const res = await fetchWithAuth(`${API_URL}/auth/change-password`, {
+              method: 'POST',
+              body: JSON.stringify({ currentPassword, newPassword })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Update failed');
+            alert('Password updated successfully!');
+            pwForm.reset();
+          } catch (err) {
+            alert(err.message);
+          } finally {
+            btn.innerText = 'Update Password';
+          }
+        };
+      }
+    }
+
+    applyInitialTheme();
+
+    function handleGlobalSearch(e) {
+      if (e.key === 'Enter') {
+        const query = e.target.value.toLowerCase().trim();
+        const views = Object.keys(ViewManager.views);
+        // Find if query matches any view name
+        const match = views.find(v => query.includes(v)) ||
+          (query.includes('pay') ? 'contributions' : null) ||
+          (query.includes('borrow') ? 'loans' : null) ||
+          (query.includes('stat') ? 'analytics' : null);
+
+        if (match) {
+          window.location.hash = match;
+          e.target.value = '';
+        } else {
+          alert('No section found for: "' + query + '". Try searching for "members", "loans", or "analytics".');
+        }
+      }
+    }
+    function setupAllFormListeners() {
+      setupAddMemberForm();
+      setupRecordPaymentForm();
+      setupRequestLoanForm();
+      setupCreateMeetingForm();
+    }
+
+    function switchSettingsTab(tabId, btn) {
+      // Update Buttons
+      document.querySelectorAll('.settings-nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Update Panels
+      document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('settings-' + tabId).classList.add('active');
+    }
+
+    async function setupSettingsLogic() {
+      const modeToggle = document.getElementById('dark-mode-toggle');
+      if (modeToggle) {
+        modeToggle.checked = document.body.classList.contains('dark-mode');
+      }
+
+      // Populate Display Name
+      const nameInput = document.getElementById('s-name');
+      const emailInput = document.getElementById('s-email');
+      const initialsDiv = document.getElementById('settings-av');
+
+      try {
+        const res = await fetchWithAuth(`${API_URL}/auth/me`);
+        const user = await res.json();
+        if (nameInput) nameInput.value = `${user.first_name} ${user.last_name}`;
+        if (emailInput) emailInput.value = user.email;
+        if (initialsDiv) initialsDiv.innerText = (user.first_name[0] + user.last_name[0]).toUpperCase();
+      } catch (e) { }
+
+      const pwForm = document.getElementById('changePasswordForm');
+      if (pwForm) {
+        pwForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const currentPassword = document.getElementById('cp-current').value;
+          const newPassword = document.getElementById('cp-new').value;
+          const btn = e.target.querySelector('button');
+
+          const originalText = btn.innerText;
+          btn.innerText = 'Updating...';
+          btn.disabled = true;
+          try {
+            const res = await fetchWithAuth(`${API_URL}/auth/change-password`, {
+              method: 'POST',
+              body: JSON.stringify({ currentPassword, newPassword })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Update failed');
+            alert('Password updated successfully!');
+            pwForm.reset();
+          } catch (err) {
+            alert(err.message);
+          } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
+          }
+        };
+      }
+
+      const profileForm = document.getElementById('updateProfileForm');
+      if (profileForm) {
+        profileForm.onsubmit = async (e) => {
+          e.preventDefault();
+          alert('Profile update functionality ready for production backend integration.');
+        };
+      }
+    }
+  </script>
+</body>
+
+</html>

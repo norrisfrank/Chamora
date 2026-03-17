@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Choose Group — Chamora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --green: #1A4D2E;
+      --green-light: #2d7a45;
+      --gold: #F5A623;
+      --bg: #F9F9F7;
+      --text: #1C1C1E;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --card: #ffffff;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .container {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2rem;
+    }
+    .hero {
+      background: linear-gradient(160deg, #122e1c 0%, var(--green) 45%, #1e5c35 100%);
+      color: white;
+      border-radius: 18px;
+      padding: 2.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 520px;
+    }
+    .hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+    }
+    .hero p { color: rgba(255,255,255,0.7); line-height: 1.7; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .toggle-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .toggle-btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .toggle-btn.active {
+      background: var(--green);
+      color: #fff;
+      border-color: var(--green);
+    }
+    .field { margin-bottom: 1rem; }
+    .field label { display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .field input, .field textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 0.8rem;
+      font-size: 0.9rem;
+      background: #fff;
+    }
+    .primary-btn {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--green) 0%, var(--green-light) 100%);
+      color: white;
+      cursor: pointer;
+    }
+    .group-list {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .group-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      background: #fff;
+    }
+    .group-item:hover { border-color: var(--green); }
+    .group-code {
+      font-weight: 800;
+      color: var(--green);
+      font-size: 0.85rem;
+    }
+    .muted { color: var(--text-muted); font-size: 0.85rem; }
+    .hidden { display: none; }
+    .notice { margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted); }
+    .success { color: var(--green); font-weight: 700; }
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; }
+      .hero { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div>
+        <h1>Welcome to Chamora</h1>
+        <p>Choose how you want to continue. Join an existing chama using its unique group code, or start a brand new group with clean, isolated data.</p>
+      </div>
+      <div>
+        <div class="muted">You can join or create up to 5 groups.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="toggle-row">
+        <button class="toggle-btn active" id="toggle-existing" type="button">Existing Group</button>
+        <button class="toggle-btn" id="toggle-new" type="button">New Group</button>
+      </div>
+
+      <div id="existing-panel">
+        <div class="field">
+          <label>Enter Group Code</label>
+          <input type="text" id="join-code" placeholder="e.g. 482917" maxlength="6" />
+        </div>
+        <button class="primary-btn" id="join-btn" type="button">Join Group</button>
+        <div class="notice" id="join-msg"></div>
+
+        <div style="margin-top: 1.25rem; font-weight: 800;">Your Groups</div>
+        <div class="group-list" id="group-list"></div>
+      </div>
+
+      <div id="new-panel" class="hidden">
+        <div class="field">
+          <label>Group Name</label>
+          <input type="text" id="group-name" placeholder="e.g. Umoja Chama" />
+        </div>
+        <div class="field">
+          <label>Description</label>
+          <textarea id="group-desc" rows="3" placeholder="Optional description"></textarea>
+        </div>
+        <button class="primary-btn" id="create-btn" type="button">Create New Group</button>
+        <div class="notice" id="create-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const baseOrigin = window.location.origin === 'null' ? 'http://localhost:5000' : window.location.origin;
+    const API_URL = `${baseOrigin}/api`;
+
+    const toggleExisting = document.getElementById('toggle-existing');
+    const toggleNew = document.getElementById('toggle-new');
+    const existingPanel = document.getElementById('existing-panel');
+    const newPanel = document.getElementById('new-panel');
+    const joinMsg = document.getElementById('join-msg');
+    const createMsg = document.getElementById('create-msg');
+    const groupList = document.getElementById('group-list');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = 'login.html';
+    }
+
+    function setTab(tab) {
+      if (tab === 'existing') {
+        toggleExisting.classList.add('active');
+        toggleNew.classList.remove('active');
+        existingPanel.classList.remove('hidden');
+        newPanel.classList.add('hidden');
+      } else {
+        toggleExisting.classList.remove('active');
+        toggleNew.classList.add('active');
+        existingPanel.classList.add('hidden');
+        newPanel.classList.remove('hidden');
+      }
+    }
+
+    toggleExisting.addEventListener('click', () => setTab('existing'));
+    toggleNew.addEventListener('click', () => setTab('new'));
+
+    async function fetchWithAuth(url, options = {}) {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...options.headers
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      return fetch(url, { ...options, headers, credentials: 'include' });
+    }
+
+    function renderGroups(groups) {
+      if (!groups.length) {
+        groupList.innerHTML = '<div class="muted">No groups yet. Create or join one.</div>';
+        return;
+      }
+      groupList.innerHTML = groups.map(g => `
+        <div class="group-item" data-group-id="${g.id}" data-group-name="${g.name}">
+          <div>
+            <div style="font-weight: 800;">${g.name}</div>
+            <div class="muted">${g.description || 'No description'}</div>
+          </div>
+          <div class="group-code">${g.group_code}</div>
+        </div>
+      `).join('');
+      document.querySelectorAll('.group-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const groupId = item.getAttribute('data-group-id');
+          const groupName = item.getAttribute('data-group-name');
+          localStorage.setItem('activeGroupId', groupId);
+          localStorage.setItem('activeGroupName', groupName);
+          window.location.href = 'dashboard.html';
+        });
+      });
+    }
+
+    async function loadGroups() {
+      const res = await fetchWithAuth(`${API_URL}/groups/my`);
+      if (!res.ok) {
+        renderGroups([]);
+        return;
+      }
+      const groups = await res.json();
+      renderGroups(groups);
+      if (!groups.length) setTab('new');
+    }
+
+    document.getElementById('join-btn').addEventListener('click', async () => {
+      joinMsg.innerText = '';
+      const groupCode = document.getElementById('join-code').value.trim();
+      if (!groupCode) {
+        joinMsg.innerText = 'Enter the 6-digit group code.';
+        return;
+      }
+      const res = await fetchWithAuth(`${API_URL}/groups/join`, {
+        method: 'POST',
+        body: JSON.stringify({ groupCode })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        joinMsg.innerText = data.message || 'Failed to join group';
+        return;
+      }
+      localStorage.setItem('activeGroupId', data.id);
+      localStorage.setItem('activeGroupName', data.name);
+      window.location.href = 'dashboard.html';
+    });
+
+    document.getElementById('create-btn').addEventListener('click', async () => {
+      createMsg.innerText = '';
+      const name = document.getElementById('group-name').value.trim();
+      const description = document.getElementById('group-desc').value.trim();
+      if (!name) {
+        createMsg.innerText = 'Group name is required.';
+        return;
+      }
+      const res = await fetchWithAuth(`${API_URL}/groups/create`, {
+        method: 'POST',
+        body: JSON.stringify({ name, description })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        createMsg.innerText = data.message || 'Failed to create group';
+        return;
+      }
+      createMsg.innerHTML = `<span class="success">Group created. Code: ${data.group_code}</span>`;
+      localStorage.setItem('activeGroupId', data.id);
+      localStorage.setItem('activeGroupName', data.name);
+      window.location.href = 'dashboard.html';
+    });
+
+    loadGroups();
+  </script>
+</body>
+</html>
