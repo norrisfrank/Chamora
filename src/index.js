@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,7 +40,16 @@ app.use(cookieParser());
 // Test DB Connection
 const db = require('./config/db');
 db.query('SELECT NOW()')
-    .then(() => console.log('Database connected successfully'))
+    .then(async () => {
+        console.log('Database connected successfully');
+        try {
+            const schema = fs.readFileSync(path.join(__dirname, '../schema.sql'), 'utf8');
+            await db.query(schema);
+            console.log('Database schema verified/initialized successfully.');
+        } catch (schemaErr) {
+            console.error('Failed to initialize database schema:', schemaErr);
+        }
+    })
     .catch(err => console.error('Database connection failed:', err));
 
 const publicDir = path.join(__dirname, '../public');
