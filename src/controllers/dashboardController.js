@@ -129,6 +129,7 @@ const dashboardController = {
             const format = String(req.query.format || 'csv').toLowerCase();
             const data = await buildFinancialReport({ ...req.query, groupId: req.groupId });
 
+            if (format !== 'csv') {
                 return res.status(400).json({ message: 'Unsupported format. Use format=csv' });
             }
 

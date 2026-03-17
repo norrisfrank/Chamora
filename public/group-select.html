@@ -285,19 +285,30 @@
         createMsg.innerText = 'Group name is required.';
         return;
       }
-      const res = await fetchWithAuth(`${API_URL}/groups/create`, {
-        method: 'POST',
-        body: JSON.stringify({ name, description })
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        createMsg.innerText = data.message || 'Failed to create group';
-        return;
+      try {
+        const res = await fetchWithAuth(`${API_URL}/groups/create`, {
+          method: 'POST',
+          body: JSON.stringify({ name, description })
+        });
+        
+        let data;
+        try {
+           data = await res.json();
+        } catch(e) {
+           data = { message: `HTTP Error ${res.status}: ${res.statusText}` };
+        }
+
+        if (!res.ok) {
+          createMsg.innerText = data.message || 'Failed to create group';
+          return;
+        }
+        createMsg.innerHTML = `<span class="success">Group created. Code: ${data.group_code}</span>`;
+        localStorage.setItem('activeGroupId', data.id);
+        localStorage.setItem('activeGroupName', data.name);
+        window.location.href = 'dashboard.html';
+      } catch (e) {
+        createMsg.innerText = 'Network Error: ' + e.message;
       }
-      createMsg.innerHTML = `<span class="success">Group created. Code: ${data.group_code}</span>`;
-      localStorage.setItem('activeGroupId', data.id);
-      localStorage.setItem('activeGroupName', data.name);
-      window.location.href = 'dashboard.html';
     });
 
     loadGroups();

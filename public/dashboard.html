@@ -809,9 +809,7 @@
             style="display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;">Group/Category</label>
           <select id="p-group"
             style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; outline: none; background: var(--surface-2); color: var(--text);">
-            <option value="1">Umoja Chama (Main)</option>
-            <option value="2">Emergency Fund</option>
-            <option value="3">Welfare Fund</option>
+            <option value="">Loading groups...</option>
           </select>
         </div>
         <div style="margin-bottom: 1.25rem;"><label
@@ -1317,6 +1315,7 @@
         window.addEventListener('hashchange', () => this.handleRouting());
         this.handleRouting();
         loadUserProfile();
+        loadUserGroups();
         checkWelcomePopup();
 
         // Socket.io Real-time Listeners
@@ -1379,8 +1378,12 @@
 
     async function fetchWithAuth(url, options = {}) {
       const token = localStorage.getItem('token');
+      // Default to group ID 1 if not set
+      const activeGroupId = localStorage.getItem('activeGroupId') || '1';
+      
       const headers = {
         'Content-Type': 'application/json',
+        'x-group-id': activeGroupId,
         ...options.headers
       };
       if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -1402,6 +1405,34 @@
           document.getElementById('user-initials').innerText = (user.first_name[0] + user.last_name[0]).toUpperCase();
         }
       } catch (err) { console.error('Profile load failed', err); }
+    }
+
+    async function loadUserGroups() {
+      try {
+        // Temp workaround to fetch groups without activeGroupId header
+        const res = await fetch(`${API_URL}/groups/my`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (!res.ok) return;
+        const groups = await res.json();
+        if (groups && groups.length > 0) {
+          const mainGroup = groups[0];
+          localStorage.setItem('activeGroupId', mainGroup.id);
+          
+          const csName = document.querySelector('.cs-name');
+          const csAvatar = document.querySelector('.cs-avatar');
+          if (csName) csName.innerText = mainGroup.name;
+          if (csAvatar) csAvatar.innerText = mainGroup.name.substring(0, 2).toUpperCase();
+
+          const pGroup = document.getElementById('p-group');
+          if (pGroup) {
+            pGroup.innerHTML = groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+          }
+          
+          // Re-fetch data now that activeGroupId is set
+          ViewManager.refreshData();
+        }
+      } catch (err) { console.error('Groups load failed', err); }
     }
 
 
@@ -1681,7 +1712,10 @@
             method: 'POST',
             body: JSON.stringify({ firstName, lastName, email, phoneNumber, role })
           });
-          if (!res.ok) throw new Error('Failed to add member');
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to add member');
+          }
           hideAddMemberModal();
           loadMembers();
           addNotification('Member Added', `${firstName} has been joined to the chama.`);
@@ -1758,7 +1792,10 @@
             method: 'POST',
             body: JSON.stringify({ amount, groupId })
           });
-          if (!res.ok) throw new Error('Failed to record payment');
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to record payment');
+          }
           hideRecordPaymentModal();
           if (ViewManager.currentView === 'contributions') loadContributions();
           if (ViewManager.currentView === 'dashboard') loadRecentActivity();
@@ -1823,7 +1860,10 @@
             method: 'POST',
             body: JSON.stringify({ title, date, location, description, meetingLink })
           });
-          if (!res.ok) throw new Error('Failed to create event');
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to create event');
+          }
           hideCreateMeetingModal();
           alert('Event created successfully!');
           addNotification('Event Created', `${title} has been scheduled.`);
@@ -1850,7 +1890,10 @@
             method: 'POST',
             body: JSON.stringify({ amount, interest: 5, dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) }) // Default 5% / 30 days
           });
-          if (!res.ok) throw new Error('Failed to request loan');
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.message || 'Failed to request loan');
+          }
           hideRequestLoanModal();
           if (ViewManager.currentView === 'loans') loadLoans();
           addNotification('Loan Requested', `Your application for KSh ${amount} has been submitted.`);

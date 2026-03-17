@@ -43,7 +43,10 @@ const memberController = {
             res.status(201).json(newMember);
         } catch (error) {
             console.error(error);
-            res.status(500).json({ message: 'Server error' });
+            if (error.code === '23505') {
+                return res.status(400).json({ message: 'A user with this email or phone number already exists.' });
+            }
+            res.status(500).json({ message: 'Server error: ' + error.message });
         }
     },
 

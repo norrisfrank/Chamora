@@ -6,7 +6,7 @@ const { requireGroup } = require('../middleware/groupMiddleware');
 
 router.post('/apply', authMiddleware, requireGroup, requireRoles('admin', 'treasurer', 'member'), loanController.applyLoan);
 router.get('/my', authMiddleware, requireGroup, loanController.getUserLoans);
-router.put('/:id', authMiddleware, requireGroup, requireRoles('admin', 'treasurer'), loanController.updateLoan);
-router.delete('/:id', authMiddleware, requireGroup, requireRoles('admin', 'treasurer'), loanController.deleteLoan);
+router.put('/:id', authMiddleware, requireGroup, requireRoles('admin', 'treasurer', 'member'), loanController.updateLoan);
+router.delete('/:id', authMiddleware, requireGroup, requireRoles('admin', 'treasurer', 'member'), loanController.deleteLoan);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const Group = require('../models/groupModel');
 const GroupMember = require('../models/groupMemberModel');
+const User = require('../models/userModel');
 
 const generateCode = () => {
     const value = Math.floor(100000 + Math.random() * 900000);
@@ -58,6 +59,12 @@ const groupController = {
             }
             const group = await Group.create(name, description, req.user.id, code);
             await GroupMember.add(req.user.id, group.id, 'admin');
+
+            // Upgrade global user role to admin if they create a group and are just a member
+            if (req.user.role === 'member') {
+                await User.updateRole(req.user.id, 'admin');
+            }
+
             res.status(201).json(group);
         } catch (error) {
             console.error(error);
